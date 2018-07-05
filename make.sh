@@ -9,4 +9,3 @@ javac @temp.dat -d bin/
 rm -f temp.dat
 
 echo "finished compiling all java files!"
-
