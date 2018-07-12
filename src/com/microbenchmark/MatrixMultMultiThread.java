@@ -4,7 +4,15 @@ import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
 
-public class MatrixMult implements Runnable {
+/**
+ * This is an example of how making higher CPU usage can be better regarding
+ * the optimization of a simple program. When running this code, consider running
+ * tools/cpustat.py (and do not forget to change the number of cores of your machine).
+ * On my machine the elapsed time to compute the matrix multplication was executed on
+ * half the time regarding the MatrixMultSingleThread version. And 4 cores came to run
+ * between 95 to 99 %.
+**/
+public class MatrixMultMultiThread implements Runnable {
   private int firstRow;
   private int lastRow;
 
@@ -13,16 +21,18 @@ public class MatrixMult implements Runnable {
   private static List<Thread> threads = new ArrayList<>();
 
   public static void main(String[] args) {
-    matrices = MatrixMult.loadMatrices();
+    matrices = MatrixMultMultiThread.loadMatrices();
     result = new Matrix(matrices.get(0).rows, matrices.get(1).cols);
 
     int numberOfRows = matrices.get(0).rows;
-    int numberOfThreads = 4;
+    int numberOfThreads = 4; // the number of cores of my machine (considering virtual cores)
 
     int size = numberOfRows / numberOfThreads;
     int offset = size;
+
+    long start = System.currentTimeMillis();
     for (int i = 0; i < numberOfThreads; i++) {
-      Thread t = new Thread(new MatrixMult(i * size, offset));
+      Thread t = new Thread(new MatrixMultMultiThread(i * size, offset));
       threads.add(t);
       t.start();
       offset += size;
@@ -33,11 +43,11 @@ public class MatrixMult implements Runnable {
           t.join();
       } catch (InterruptedException e) {}
     });
-
-    System.out.println(result);
+    long duration = System.currentTimeMillis()-start;
+    System.out.println("elapsed time " + ((duration)/1000.0d) + " s");
   }
 
-  public MatrixMult(int firstRow, int lastRow) {
+  public MatrixMultMultiThread(int firstRow, int lastRow) {
     this.firstRow = firstRow;
     this.lastRow = lastRow;
   }
