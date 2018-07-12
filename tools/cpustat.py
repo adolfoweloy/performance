@@ -1,7 +1,13 @@
 import psutil
+import sys
 
-cpus = psutil.cpu_times_percent(1, True)
-print "user\tsystem\tidle"
+interval = 1
+if len(sys.argv) == 2:
+    interval = float(sys.argv[1])
 
-for cpu in cpus:
-    print "%.2f\t%.2f\t%.2f" % (cpu.user, cpu.system, cpu.idle)
+while True:
+    cpus = psutil.cpu_times_percent(interval, True)
+    print "user\tsystem\tidle"
+    for cpu in cpus:
+        print "%.2f\t%.2f\t%.2f" % (cpu.user, cpu.system, cpu.idle)
+    print "---"

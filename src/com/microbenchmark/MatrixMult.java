@@ -4,35 +4,61 @@ import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
 
-public class MatrixMult {
-  public static void main(String[] args) {
-    MatrixMult mm = new MatrixMult();
+public class MatrixMult implements Runnable {
+  private int firstRow;
+  private int lastRow;
 
-    List<Matrix> matrices = mm.loadMatrices();
-    Matrix result = mm.multiply(
-      matrices.get(0),
-      matrices.get(1));
+  private static List<Matrix> matrices;
+  private static Matrix result;
+  private static List<Thread> threads = new ArrayList<>();
+
+  public static void main(String[] args) {
+    matrices = MatrixMult.loadMatrices();
+    result = new Matrix(matrices.get(0).rows, matrices.get(1).cols);
+
+    int numberOfRows = matrices.get(0).rows;
+    int numberOfThreads = 4;
+
+    int size = numberOfRows / numberOfThreads;
+    int offset = size;
+    for (int i = 0; i < numberOfThreads; i++) {
+      Thread t = new Thread(new MatrixMult(i * size, offset));
+      threads.add(t);
+      t.start();
+      offset += size;
+    }
+
+    threads.forEach(t -> {
+      try {
+          t.join();
+      } catch (InterruptedException e) {}
+    });
 
     System.out.println(result);
   }
 
-  public Matrix multiply(Matrix firstMatrix, Matrix secondMatrix) {
-
-    Matrix result = new Matrix(firstMatrix.rows, secondMatrix.cols);
-    for (int i = 0; i < firstMatrix.rows; i++) {
-      for (int j = 0; j < secondMatrix.cols; j++) {
-        double sum = 0.0;
-        for (int k = 0; k < secondMatrix.rows; k++) {
-          sum += firstMatrix.get(i, k) * secondMatrix.get(k, j);
-        }
-        result.set(i, j, sum);
-      }
-    }
-
-    return result;
+  public MatrixMult(int firstRow, int lastRow) {
+    this.firstRow = firstRow;
+    this.lastRow = lastRow;
   }
 
-  private List<Matrix> loadMatrices() {
+  @Override
+  public void run() {
+      Matrix firstMatrix = matrices.get(0);
+      Matrix secondMatrix = matrices.get(1);
+
+      for (int i = firstRow; i < lastRow; i++) {
+        for (int j = 0; j < secondMatrix.cols; j++) {
+          double sum = 0.0;
+          for (int k = 0; k < secondMatrix.rows; k++) {
+            sum += firstMatrix.get(i, k) * secondMatrix.get(k, j);
+          }
+          result.set(i, j, sum);
+        }
+      }
+  }
+
+  private static List<Matrix> loadMatrices() {
     List<Matrix> matrices = new ArrayList<>();
     Scanner sc = new Scanner(System.in);
 
